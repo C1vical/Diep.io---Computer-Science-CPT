@@ -22,7 +22,7 @@ public class MenuFrame extends JFrame {
         titleLabel.setForeground(new Color(30, 60, 120));
         titleLabel.setOpaque(false);
         titleLabel.setBorder(BorderFactory.createEmptyBorder(30, 0, 30, 0));
-        add(titleLabel, BorderLayout.NORTH);
+        menuPanel.add(titleLabel, BorderLayout.NORTH);
 
         // Buttons
         JPanel buttonsPanel = new JPanel();
@@ -59,6 +59,7 @@ public class MenuFrame extends JFrame {
                 JOptionPane.showMessageDialog(MenuFrame.this, "Created by:\nJonathan Yu\nCheney Chen", "Credits", JOptionPane.INFORMATION_MESSAGE);
             }
         });
+
         // Exit button
         JButton exitButton = new JButton("Exit");
         exitButton.setFont(new Font("Segoe Print", Font.BOLD, 32));
@@ -78,6 +79,11 @@ public class MenuFrame extends JFrame {
         buttonsPanel.add(creditButton);
         buttonsPanel.add(Box.createVerticalStrut(20)); // space
         buttonsPanel.add(exitButton);
+
+        // Remove focus from the buttons
+        playButton.setFocusable(false);
+        exitButton.setFocusable(false);
+        creditButton.setFocusable(false);
 
         // Add buttons panel to menu panel
         menuPanel.add(buttonsPanel, BorderLayout.CENTER);
