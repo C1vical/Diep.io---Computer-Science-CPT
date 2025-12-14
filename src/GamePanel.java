@@ -11,9 +11,9 @@ public class GamePanel extends JPanel {
 
     // Tank variables
     private int tankX = -1, tankY = -1; // Position
-    private double tankAngle; // angle
-    private int TANK_WIDTH = 250, TANK_HEIGHT = 250; // Tank size
-    private double SPEED = 5; // Tank speed
+    private double tankAngle; // Angle
+    private int tankWidth = 250, tankHeight = 250; // Tank size
+    private double tankSpeed = 5; // Tank speed
 
     // Mouse variables
     private int mouseX, mouseY; // Coordinates of the cursor
@@ -147,13 +147,13 @@ public class GamePanel extends JPanel {
                 moveY /= Math.sqrt(2);
             }
 
-            // Apply speed
-            tankX += (int)(moveX * SPEED);
-            tankY += (int)(moveY * SPEED);
+            // Apply tankSpeed
+            tankX += (int)(moveX * tankSpeed);
+            tankY += (int)(moveY * tankSpeed);
 
             // Keep tank inside panel by comparing new coordinates to the max width and height of the panel
-            tankX = Math.max(0, Math.min(tankX, getWidth() - TANK_WIDTH));
-            tankY = Math.max(0, Math.min(tankY, getHeight() - TANK_HEIGHT));
+            tankX = Math.max(0, Math.min(tankX, getWidth() - tankWidth));
+            tankY = Math.max(0, Math.min(tankY, getHeight() - tankHeight));
 
             // Repaint the panel
             repaint();
@@ -166,8 +166,8 @@ public class GamePanel extends JPanel {
     private void rotation() {
         Timer timer = new Timer(15, e -> {
             // Center of the tank
-            int centerX = tankX + TANK_WIDTH / 2;
-            int centerY = tankY + TANK_HEIGHT / 2;
+            int centerX = tankX + tankWidth / 2;
+            int centerY = tankY + tankHeight / 2;
 
             // Difference between mouse and tank
             int dx = mouseX - centerX;
@@ -175,6 +175,8 @@ public class GamePanel extends JPanel {
 
             // Calculate angle (in radians)
             tankAngle = Math.atan2(dy, dx);
+
+            // Repaint
             repaint();
         });
         timer.start();
@@ -190,18 +192,18 @@ public class GamePanel extends JPanel {
 
          // Set initial position if not set yet
         if (tankX == -1 && tankY == -1) {
-            tankX = (getWidth() - TANK_WIDTH) / 2;
-            tankY = (getHeight() - TANK_HEIGHT) / 2;
+            tankX = (getWidth() - tankWidth) / 2;
+            tankY = (getHeight() - tankHeight) / 2;
         }
 
         // Move origin to tank center
-        g2.translate(tankX + TANK_WIDTH / 2, tankY + TANK_HEIGHT / 2);
+        g2.translate(tankX + tankWidth / 2, tankY + tankHeight / 2);
         
         // Rotate tank
         g2.rotate(tankAngle);
 
         // Draw tank
-        g2.drawImage(tankImage, -TANK_WIDTH / 2, -TANK_HEIGHT / 2, TANK_WIDTH, TANK_HEIGHT,null);
+        g2.drawImage(tankImage, -tankWidth / 2, -tankHeight / 2, tankWidth, tankHeight,null);
 
         g2.dispose();
     }

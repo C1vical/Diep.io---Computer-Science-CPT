@@ -70,6 +70,7 @@ public class MenuFrame extends JFrame {
         // Add menu panel to menu frame
         add(menuPanel);
         setVisible(true);
+        setResizable(false);
     }
 
     private class ImagePanel extends JPanel {
