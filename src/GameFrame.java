@@ -1,10 +1,9 @@
 import javax.swing.*;
 
 public class GameFrame extends JFrame {
-
     public GameFrame() {
         setTitle("Tank Game");
-        setExtendedState(JFrame.MAXIMIZED_BOTH);  // full screen window
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
         GamePanel panel = new GamePanel();
@@ -12,8 +11,7 @@ public class GameFrame extends JFrame {
 
         setVisible(true);
     }
-
-    public static void main(String[] args) {
+    public static void runGame() {
         new GameFrame();
     }
 }

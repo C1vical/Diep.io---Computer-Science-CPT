@@ -6,93 +6,89 @@ import java.awt.event.ActionListener;
 public class MenuFrame extends JFrame {
     public MenuFrame() {
         setTitle("Tank Game"); // Sets the title of the menu frame
-        setSize(1280, 720); // Sets window size as 1280 x 720
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
+
         setMinimumSize(new Dimension(800, 600)); // Sets the minimum window size to 800 x 600
         setLocationRelativeTo(null); // Centers the 1280x720 window
 
-        // Main panel
-        JPanel menuPanel = new JPanel();
-        menuPanel.setLayout(new BorderLayout());
-        menuPanel.setBackground(new Color(162, 162, 162));
+        // Main panel (background image)
+        ImagePanel menuPanel = new ImagePanel("src/assets/menu/mainmenu.png");
+        menuPanel.setLayout(null);
 
-        // Title label
-        JLabel titleLabel = new JLabel("Tank Game");
-        titleLabel.setFont(new Font("Segoe print", Font.BOLD, 48));
-        titleLabel.setHorizontalAlignment(JLabel.CENTER);
-        titleLabel.setForeground(new Color(30, 60, 120));
-        titleLabel.setOpaque(false);
-        titleLabel.setBorder(BorderFactory.createEmptyBorder(30, 0, 30, 0));
-        menuPanel.add(titleLabel, BorderLayout.NORTH);
-
-        // Buttons
-        JPanel buttonsPanel = new JPanel();
-        buttonsPanel.setBackground(new Color(162, 162, 162));
-        buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.Y_AXIS));
-        
         // Play button
-        JButton playButton = new JButton("Play");
-        playButton.setFont(new Font("Segoe Print", Font.BOLD, 32));
-        playButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        playButton.setMaximumSize(new Dimension(200, 60));
+        ImageIcon playIcon = new ImageIcon("src/assets/menu/playButton.png");
+        int playWidth = 720;
+        int playHeight = 275;
+        Image resizedPlay = playIcon.getImage().getScaledInstance(playWidth, playHeight, Image.SCALE_SMOOTH);
+        ImageIcon resizedPlayIcon = new ImageIcon(resizedPlay);
+        JButton playButton = new JButton(resizedPlayIcon);
+        // JButton playButton = new JButton(playIcon);
+        playButton.setBorderPainted(false);
+        playButton.setContentAreaFilled(false);
+        playButton.setFocusPainted(false);
+        playButton.setOpaque(false);
         playButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // Clear the frame
-                MenuFrame.this.getContentPane().removeAll();
-                // Add the GamePanel
-                GamePanel gamePanel = new GamePanel();
-                MenuFrame.this.add(gamePanel);
-                // Refresh the JFrame
-                MenuFrame.this.revalidate();
-                MenuFrame.this.repaint();
+                dispose();
+                // Run game frame
+                GameFrame.runGame();
             }
         });
 
         // Credits button
-        JButton creditButton = new JButton("Credits");
-        creditButton.setFont(new Font("Segoe Print", Font.BOLD, 32));
-        creditButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        creditButton.setMaximumSize(new Dimension(200, 60));
+        ImageIcon creditsIcon = new ImageIcon("src/assets/menu/creditsButton.png");
+        int creditsWidth = 280;
+        int creditsHeight = 100;
+        Image resizedCredits = creditsIcon.getImage().getScaledInstance(creditsWidth, creditsHeight, Image.SCALE_SMOOTH);
+        ImageIcon resizedCreditsIcon = new ImageIcon(resizedCredits);
+        JButton creditButton = new JButton(resizedCreditsIcon);
+        // JButton creditButton = new JButton(creditsIcon);
+        creditButton.setBorderPainted(false);
+        creditButton.setContentAreaFilled(false);
+        creditButton.setFocusPainted(false);
+        creditButton.setOpaque(false);
         creditButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(MenuFrame.this, "Created by:\nJonathan Yu\nCheney Chen", "Credits", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(MenuFrame.this, "Created by:\nJonathan Yu\nCheney Chen", "Credits",
+                        JOptionPane.INFORMATION_MESSAGE);
             }
         });
 
-        // Exit button
-        JButton exitButton = new JButton("Exit");
-        exitButton.setFont(new Font("Segoe Print", Font.BOLD, 32));
-        exitButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        exitButton.setMaximumSize(new Dimension(200, 60));
-        exitButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.exit(0);
-            }
-        });
-
-        // Add spacing and buttons to panel
-        buttonsPanel.add(Box.createVerticalStrut(20)); // space
-        buttonsPanel.add(playButton);
-        buttonsPanel.add(Box.createVerticalStrut(20)); // space
-        buttonsPanel.add(creditButton);
-        buttonsPanel.add(Box.createVerticalStrut(20)); // space
-        buttonsPanel.add(exitButton);
+        // Add buttons to panel
+        playButton.setBounds(600, 565, playWidth, playHeight);
+        menuPanel.add(playButton);
+        creditButton.setBounds(-10, 940, creditsWidth, creditsHeight);
+        menuPanel.add(creditButton);
 
         // Remove focus from the buttons
         playButton.setFocusable(false);
-        exitButton.setFocusable(false);
         creditButton.setFocusable(false);
 
-        // Add buttons panel to menu panel
-        menuPanel.add(buttonsPanel, BorderLayout.CENTER);
-        
         // Add menu panel to menu frame
         add(menuPanel);
         setVisible(true);
     }
-    
+
+    private class ImagePanel extends JPanel {
+        private Image backgroundImage;
+
+        public ImagePanel(String imagePath) {
+            ImageIcon icon = new ImageIcon(imagePath);
+            backgroundImage = icon.getImage();
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            if (backgroundImage != null) {
+                g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+            }
+        }
+    }
+
     public static void main(String[] args) {
         new MenuFrame();
     }
