@@ -1,210 +1,231 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.MouseMotionAdapter;
-import java.awt.event.MouseEvent;
-import java.io.*;
+import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
+import java.io.File;
+import java.io.IOException;
 
 public class GamePanel extends JPanel {
-    // private final int GRID_SIZE = 30;
+    private Tank tank;
+    private BufferedImage mapImage, borderTop, borderBottom, borderLeft, borderRight;
+    private int borderThickness = 120;
+    private BufferedImage tankImage;
 
-    // Tank variables
-    private int tankX = -1, tankY = -1; // Position
-    private double tankAngle; // Angle
-    private int tankWidth = 250, tankHeight = 250; // Tank size
-    private double tankSpeed = 5; // Tank speed
+    // Camera coordinates - world coordinates of the top-left of the screen
+    private int camX, camY;
+    private JLabel cameraLabel;
+    private JLabel worldLabel;
 
-    // Mouse variables
-    private int mouseX, mouseY; // Coordinates of the cursor
 
-    // WASD booleans
-    private boolean wPressed = false;
-    private boolean sPressed = false;
-    private boolean aPressed = false;
-    private boolean dPressed = false;
+    // World size
+    private final int mapWidth = 3000;
+    private final int mapHeight = 3000;
 
-    // File path of the tank
-    private String tank = "src/assets//tanks/basic.png";
-
-    // Images
-    private Image backgroundImage;
-    private Image tankImage;
+    // Input
+    private boolean w, a, s, d;
+    private int mouseX, mouseY; // Coordinates of the cursor in the screen (not world)
 
     public GamePanel() {
+        try {
+            // Load images
+            tankImage = ImageIO.read(new File("src/assets/tanks/basic.png"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        // Create map and tile image
+        mapImage = drawMap(3000, 20);
+        borderTop = drawBorder(mapWidth, borderThickness, 20);
+        borderBottom = drawBorder(mapWidth, borderThickness, 20);
+        borderLeft = drawBorder(borderThickness, mapHeight, 20);
+        borderRight = drawBorder(borderThickness, mapHeight, 20);
+
+        // Place tank near the center of the square world
+        tank = new Tank(mapWidth / 2 - 125, mapHeight / 2 - 125, tankImage);
+
         setFocusable(true);
+        
+        setupInput();
+        startGameLoop();
 
+        // Small on-screen camera info label (updated each tick)
+        cameraLabel = new JLabel("<html>camX: 0<br>camY: 0</html>");
+        cameraLabel.setOpaque(true);
+        cameraLabel.setBackground(Color.RED);
+        cameraLabel.setForeground(Color.WHITE);
+        cameraLabel.setBorder(BorderFactory.createEmptyBorder(4,4,4,4));
+        this.add(cameraLabel);
+
+        // Small on-screen world info label (updated each tick)
+        worldLabel = new JLabel("<html>tank: 0, 0<br>mouse: 0, 0</html>");
+        worldLabel.setOpaque(true);
+        worldLabel.setBackground(Color.DARK_GRAY);
+        worldLabel.setForeground(Color.WHITE);
+        worldLabel.setBorder(BorderFactory.createEmptyBorder(4,4,4,4));
+        this.add(worldLabel);
+    }
+
+    private void setupInput() {
+        // WASD inputs
+        addKeyListener(new KeyAdapter() {
+            // Key pressed
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_W)
+                    w = true;
+                if (e.getKeyCode() == KeyEvent.VK_A)
+                    a = true;
+                if (e.getKeyCode() == KeyEvent.VK_S)
+                    s = true;
+                if (e.getKeyCode() == KeyEvent.VK_D)
+                    d = true;
+            }
+            // Key released
+            public void keyReleased(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_W)
+                    w = false;
+                if (e.getKeyCode() == KeyEvent.VK_A)
+                    a = false;
+                if (e.getKeyCode() == KeyEvent.VK_S)
+                    s = false;
+                if (e.getKeyCode() == KeyEvent.VK_D)
+                    d = false;
+            }
+        });
+        // Mouse cursor coordinates
         addMouseMotionListener(new MouseMotionAdapter() {
-            @Override
+            // Cursor moved
             public void mouseMoved(MouseEvent e) {
-            mouseX = e.getX();
-            mouseY = e.getY();
+                mouseX = e.getX();
+                mouseY = e.getY();
             }
-
-            @Override
+            // Cursor dragged
             public void mouseDragged(MouseEvent e) {
-            mouseX = e.getX();
-            mouseY = e.getY();
+                mouseX = e.getX();
+                mouseY = e.getY();
             }
         });
-
-        try {
-            tankImage = ImageIO.read(new File(tank));
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        
-        try {
-            backgroundImage = ImageIO.read(new File("src/assets/grid.png"));
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-        // Set up movement (WASD)
-        movement();
-        rotation();
     }
 
-    private void movement() {
-        // W - up
-        getInputMap().put(KeyStroke.getKeyStroke("pressed W"), "wPressed");
-        getActionMap().put("wPressed", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                wPressed = true;
-            }
-        });
-        getInputMap().put(KeyStroke.getKeyStroke("released W"), "wReleased");
-        getActionMap().put("wReleased", new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-                wPressed = false;
-            }
-        });
-
-        // S - down
-        getInputMap().put(KeyStroke.getKeyStroke("pressed S"), "sPressed");
-        getActionMap().put("sPressed", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                sPressed = true;
-            }
-        });
-        getInputMap().put(KeyStroke.getKeyStroke("released S"), "sReleased");
-        getActionMap().put("sReleased", new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-                sPressed = false;
-            }
-        });
-
-        // A - left
-        getInputMap().put(KeyStroke.getKeyStroke("pressed A"), "aPressed");
-        getActionMap().put("aPressed", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                aPressed = true;
-            }
-        });
-        getInputMap().put(KeyStroke.getKeyStroke("released A"), "aReleased");
-        getActionMap().put("aReleased", new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-                aPressed = false;
-            }
-        });
-
-        // D - right
-        getInputMap().put(KeyStroke.getKeyStroke("pressed D"), "dPressed");
-        getActionMap().put("dPressed", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                dPressed = true;
-            }
-        });
-        getInputMap().put(KeyStroke.getKeyStroke("released D"), "dReleased");
-        getActionMap().put("dReleased", new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-                dPressed = false;
-            }
-        });
-
+    private void startGameLoop() {
+        // In timer (repeats every 15 ms)
         Timer timer = new Timer(15, e -> {
-            double moveX = 0;
-            double moveY = 0;
+            // Update movement
+            tank.updateMovement(w, a, s, d, mapWidth, mapHeight);
 
-            if (wPressed) moveY -= 1;
-            if (sPressed) moveY += 1;
-            if (aPressed) moveX -= 1;
-            if (dPressed) moveX += 1;
+            // Convert cursor screen coordinates to world coordinates
+            double mouseWorldX = mouseX + camX;
+            double mouseWorldY = mouseY + camY;
 
-            // Normalize diagonal movement
-            if (moveX != 0 && moveY != 0) {
-                moveX /= Math.sqrt(2);
-                moveY /= Math.sqrt(2);
-            }
+            // Rotate tank using the mouse world coordinates
+            tank.rotateTank(mouseWorldX, mouseWorldY);
 
-            // Apply tankSpeed
-            tankX += (int)(moveX * tankSpeed);
-            tankY += (int)(moveY * tankSpeed);
+            // Dimensions of the screen
+            int screenWidth = getWidth();
+            int screenHeight = getHeight();
 
-            // Keep tank inside panel by comparing new coordinates to the max width and height of the panel
-            tankX = Math.max(0, Math.min(tankX, getWidth() - tankWidth));
-            tankY = Math.max(0, Math.min(tankY, getHeight() - tankHeight));
+            // Move the camera so that the tank is at the center of the screen
+            camX = (int) Math.round(tank.worldX - screenWidth / 2.0);
+            camY = (int) Math.round(tank.worldY - screenHeight / 2.0);
+            
+            // "Clamp" the camera to ensure we don't see beyond the world (just a bit of the border is ok)
+            // Maximum camera coordinates
+            int maxCamX = Math.max(0, mapWidth - screenWidth + borderThickness);
+            int maxCamY = Math.max(0, mapHeight - screenHeight + borderThickness);
+            if (camX < -borderThickness) camX = -borderThickness;
+            if (camY < -borderThickness) camY = -borderThickness;
+            if (camX > maxCamX) camX = maxCamX;
+            if (camY > maxCamY) camY = maxCamY;
 
-            // Repaint the panel
-            repaint();
-        });
-        timer.start();
-
-        
-    }
-
-    private void rotation() {
-        Timer timer = new Timer(15, e -> {
-            // Center of the tank
-            int centerX = tankX + tankWidth / 2;
-            int centerY = tankY + tankHeight / 2;
-
-            // Difference between mouse and tank
-            int dx = mouseX - centerX;
-            int dy = mouseY - centerY;
-
-            // Calculate angle (in radians)
-            tankAngle = Math.atan2(dy, dx);
+            // Update the persistent camera label instead of creating a new field each tick
+            cameraLabel.setText("<html>camX: " + camX + "<br>camY: " + camY + "</html>");
+            // Update world label with tank world coords and mouse world coords
+            worldLabel.setText("<html>tank: " + ((int)tank.worldX+125) + ", " + ((int)tank.worldY+125) + "<br>mouse: " + (int)mouseWorldX + ", " + (int)mouseWorldY + "</html>");
 
             // Repaint
             repaint();
         });
-        timer.start();
+        timer.start(); // Start the timer
     }
-    
+
+    // This draws the game
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        Graphics2D g2 = (Graphics2D) g.create();
+        Graphics2D g2 = (Graphics2D) g;
 
-        // Draw grid
-        g2.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), null);
-
-         // Set initial position if not set yet
-        if (tankX == -1 && tankY == -1) {
-            tankX = (getWidth() - tankWidth) / 2;
-            tankY = (getHeight() - tankHeight) / 2;
+        // Draw map
+        for (int x = -camX % mapImage.getWidth(); x < getWidth(); x += mapImage.getWidth()) {
+            for (int y = -camY % mapImage.getHeight(); y < getHeight(); y += mapImage.getHeight()) {
+                g2.drawImage(mapImage, x, y, null);
+            }
         }
 
-        // Move origin to tank center
-        g2.translate(tankX + tankWidth / 2, tankY + tankHeight / 2);
-        
-        // Rotate tank
-        g2.rotate(tankAngle);
+        // Draw top border
+        for (int x = -camX - borderThickness % borderTop.getWidth(); x < getWidth(); x += borderTop.getWidth()) {
+            g2.drawImage(borderTop, x, -camY - borderThickness, null);
+        }
+
+        // Draw bottom border
+        for (int x = -camX % borderBottom.getWidth(); x < getWidth(); x += borderBottom.getWidth()) {
+            g2.drawImage(borderBottom, x, -camY + mapHeight, null);
+        }
+
+        // Draw left border
+        for (int y = -camY % borderLeft.getHeight(); y < getHeight(); y += borderLeft.getHeight()) {
+            g2.drawImage(borderLeft, -camX - borderThickness, y, null);
+        }
+
+        // Draw right border
+        for (int y = -camY % borderRight.getHeight(); y < getHeight (); y += borderRight.getHeight()) {
+            g2.drawImage(borderRight, -camX + mapWidth, y, null);
+        }
 
         // Draw tank
-        g2.drawImage(tankImage, -tankWidth / 2, -tankHeight / 2, tankWidth, tankHeight,null);
+        tank.draw(g2, camX, camY);
+    }
+
+    private BufferedImage drawMap(int tileSize, int gridSize) {
+        BufferedImage img = new BufferedImage(tileSize, tileSize, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g2 = img.createGraphics();
+
+        // Background
+        g2.setColor(new Color(65, 65, 65));
+        g2.fillRect(0, 0, tileSize, tileSize);
+
+        // Grid lines
+        g2.setColor(new Color(78, 78, 78));
+        g2.setStroke(new BasicStroke(1));
+
+        for (int i = 0; i <= tileSize; i += gridSize) {
+            g2.drawLine(i, 0, i, tileSize); // Vertical
+            g2.drawLine(0, i, tileSize, i); // Horizontal
+        }
 
         g2.dispose();
+        return img;
     }
+
+    private BufferedImage drawBorder(int tileWidth, int tileHeight, int gridSize) {
+        BufferedImage img = new BufferedImage(tileWidth, tileHeight, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g2 = img.createGraphics();
+
+        // Background
+        g2.setColor(new Color(34, 34, 34));
+        g2.fillRect(0, 0, tileWidth, tileHeight);
+
+        // Grid lines
+        g2.setColor(new Color(45, 45, 45));
+        g2.setStroke(new BasicStroke(1));
+
+        for (int i = 0; i <= tileWidth; i += gridSize) {
+            g2.drawLine(i, 0, i, tileHeight); // Vertical
+        }
+        for (int i = 0; i <= tileHeight; i += gridSize) {
+            g2.drawLine(0, i, tileWidth, i); // Horizontal
+        }
+        
+        g2.dispose();
+        return img;
+    }
+
 }
