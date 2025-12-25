@@ -5,9 +5,9 @@ import java.awt.image.BufferedImage;
 public class Tank {
     // Tank coordinates in the "world"
     public double worldX = -1, worldY = -1;
-     // Angle the tank is facing
+    // Angle the tank is facing
     private double angle;
-     // Tank movement speed
+    // Tank movement speed
     private double speed = 5;
     // Tank dimensions
     private int width = 250;
@@ -27,10 +27,14 @@ public class Tank {
 
         // If multiple keys are pressed, combine their effects
         // For example, if both w and s are pressed, they cancel each other out (1-1=0)
-        if (w) moveY -= 1;
-        if (s) moveY += 1;
-        if (a) moveX -= 1;
-        if (d) moveX += 1;
+        if (w)
+            moveY -= 1;
+        if (s)
+            moveY += 1;
+        if (a)
+            moveX -= 1;
+        if (d)
+            moveX += 1;
 
         // Normalize diagonal movement (so moving diagonally isn't faster)
         if (moveX != 0 && moveY != 0) {
@@ -42,11 +46,15 @@ public class Tank {
         worldX += moveX * speed;
         worldY += moveY * speed;
 
-        // Make sure the tank can't leave the map bounds (acounting for tank size)
-        if (worldX + width / 2 < 0) worldX = -width / 2;
-        if (worldY + height / 2 < 0) worldY = -height / 2;
-        if (worldX + width / 2 > mapWidth) worldX = mapWidth - width / 2;
-        if (worldY + height / 2 > mapHeight) worldY = mapHeight - height / 2;
+        // Make sure the tank can't leave the map bounds (accounting for tank size)
+        if (worldX + width / 2 < 0)
+            worldX = -width / 2;
+        if (worldY + height / 2 < 0)
+            worldY = -height / 2;
+        if (worldX + width / 2 > mapWidth)
+            worldX = mapWidth - width / 2;
+        if (worldY + height / 2 > mapHeight)
+            worldY = mapHeight - height / 2;
     }
 
     public void rotateTank(double mouseWorldX, double mouseWorldY) {
@@ -70,10 +78,11 @@ public class Tank {
         // Restore original graphic state
         g2.setTransform(old);
     }
-    
+
     public int getWidth() {
         return width;
     }
+
     public int getHeight() {
         return height;
     }

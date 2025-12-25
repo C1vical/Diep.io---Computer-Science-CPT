@@ -16,7 +16,6 @@ public class GamePanel extends JPanel {
     private int camX = -1, camY = -1;
     private JLabel worldLabel;
 
-
     // World size
     private final int mapWidth = 3000;
     private final int mapHeight = 3000;
@@ -43,31 +42,16 @@ public class GamePanel extends JPanel {
         tank = new Tank(mapWidth / 2 - 125, mapHeight / 2 - 125, tankImage);
 
         setFocusable(true);
-<<<<<<< HEAD
 
         setupInput();
         startGameLoop();
 
         // Cordinates info label
-=======
-        setupInput();
-        startGameLoop();
-        //fixed
-        // Small on-screen camera info label (updated each tick)
-        cameraLabel = new JLabel("<html>camX: 0<br>camY: 0</html>");
-        cameraLabel.setOpaque(true);
-        cameraLabel.setBackground(Color.RED);
-        cameraLabel.setForeground(Color.WHITE);
-        cameraLabel.setBorder(BorderFactory.createEmptyBorder(4,4,4,4));
-        this.add(cameraLabel);
-
-        // Small on-screen world info label (updated each tick)
->>>>>>> a0845d19cbe1969dacff945bab0effad9af0bcb9
         worldLabel = new JLabel("<html>tank: 0, 0<br>mouse: 0, 0</html>");
         worldLabel.setOpaque(true);
         worldLabel.setBackground(Color.DARK_GRAY);
         worldLabel.setForeground(Color.WHITE);
-        worldLabel.setBorder(BorderFactory.createEmptyBorder(4,4,4,4));
+        worldLabel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
         this.add(worldLabel);
     }
 
@@ -85,6 +69,7 @@ public class GamePanel extends JPanel {
                 if (e.getKeyCode() == KeyEvent.VK_D)
                     d = true;
             }
+
             // Key released
             public void keyReleased(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_W)
@@ -104,6 +89,7 @@ public class GamePanel extends JPanel {
                 mouseX = e.getX();
                 mouseY = e.getY();
             }
+
             // Cursor dragged
             public void mouseDragged(MouseEvent e) {
                 mouseX = e.getX();
@@ -129,29 +115,29 @@ public class GamePanel extends JPanel {
             int screenWidth = getWidth();
             int screenHeight = getHeight();
 
-            // Move the camera so that the tank is at the center of the screen (use tank center)
-            camX = (int) Math.round(tank.worldX + tank.width / 2.0 - screenWidth / 2.0);
-            camY = (int) Math.round(tank.worldY + tank.height / 2.0 - screenHeight / 2.0);
-            
-            // "Clamp" the camera to ensure we don't see beyond the world (just a bit of the border is ok)
+            // Move the camera so that the tank is at the center of the screen (use tank
+            // center)
+            camX = (int) Math.round(tank.worldX + tank.getWidth() / 2.0 - screenWidth / 2.0);
+            camY = (int) Math.round(tank.worldY + tank.getHeight() / 2.0 - screenHeight / 2.0);
+
+            // "Clamp" the camera to ensure we don't see beyond the world (just a bit of the
+            // border is ok)
             // Maximum camera coordinates
             int maxCamX = Math.max(0, mapWidth - screenWidth + borderThickness);
             int maxCamY = Math.max(0, mapHeight - screenHeight + borderThickness);
-            if (camX < -borderThickness) camX = -borderThickness;
-            if (camY < -borderThickness) camY = -borderThickness;
-            if (camX > maxCamX) camX = maxCamX;
-            if (camY > maxCamY) camY = maxCamY;
-<<<<<<< HEAD
-            
-            // Update info label
-            worldLabel.setText("<html>camera: " + camX + ", " + camY + "<br>tank: " + ((int) tank.worldX + tank.getWidth() / 2) + ", " + ((int) tank.worldY + tank.getHeight() / 2) + "<br>mouse: " + (int)mouseWorldX + ", " + (int)mouseWorldY + "</html>");
-=======
+            if (camX < -borderThickness)
+                camX = -borderThickness;
+            if (camY < -borderThickness)
+                camY = -borderThickness;
+            if (camX > maxCamX)
+                camX = maxCamX;
+            if (camY > maxCamY)
+                camY = maxCamY;
 
-            // Update the persistent camera label instead of creating a new field each tick
-            cameraLabel.setText("<html>camX: " + camX + "<br>camY: " + camY + "</html>");
-            // Update world label with tank center world coords and mouse world coords
-            worldLabel.setText("<html>tank: " + (int)(tank.worldX + tank.width/2.0) + ", " + (int)(tank.worldY + tank.height/2.0) + "<br>mouse: " + (int)mouseWorldX + ", " + (int)mouseWorldY + "</html>");
->>>>>>> a0845d19cbe1969dacff945bab0effad9af0bcb9
+            // Update info label
+            worldLabel.setText("<html>camera: " + camX + ", " + camY + "<br>tank: "
+                    + ((int) tank.worldX + tank.getWidth() / 2) + ", " + ((int) tank.worldY + tank.getHeight() / 2)
+                    + "<br>mouse: " + (int) mouseWorldX + ", " + (int) mouseWorldY + "</html>");
 
             // Repaint
             repaint();
@@ -188,7 +174,7 @@ public class GamePanel extends JPanel {
         }
 
         // Draw right border
-        for (int y = -camY % borderRight.getHeight(); y < getHeight (); y += borderRight.getHeight()) {
+        for (int y = -camY % borderRight.getHeight(); y < getHeight(); y += borderRight.getHeight()) {
             g2.drawImage(borderRight, -camX + mapWidth, y, null);
         }
 
@@ -235,7 +221,7 @@ public class GamePanel extends JPanel {
         for (int i = 0; i <= tileHeight; i += gridSize) {
             g2.drawLine(0, i, tileWidth, i); // Horizontal
         }
-        
+
         g2.dispose();
         return img;
     }
