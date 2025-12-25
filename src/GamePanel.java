@@ -46,7 +46,7 @@ public class GamePanel extends JPanel {
         setFocusable(true);
         setupInput();
         startGameLoop();
-
+        //fixed
         // Small on-screen camera info label (updated each tick)
         cameraLabel = new JLabel("<html>camX: 0<br>camY: 0</html>");
         cameraLabel.setOpaque(true);
