@@ -13,16 +13,17 @@ public class GamePanel extends JPanel {
     private BufferedImage tankImage;
 
     // Camera coordinates - world coordinates of the top-left of the screen
-    private int camX = -1, camY = -1;
-    private JLabel worldLabel;
+    private int camX , camY;
 
     // World size
-    private final int mapWidth = 3000;
-    private final int mapHeight = 3000;
+    private final int mapWidth = 2000;
+    private final int mapHeight = 2000;
 
     // Input
     private boolean w, a, s, d;
     private int mouseX, mouseY; // Coordinates of the cursor in the screen (not world)
+
+    private JLabel infoLabel;
 
     public GamePanel() {
         try {
@@ -31,7 +32,8 @@ public class GamePanel extends JPanel {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        // Create map and tile image
+
+        // Draw map and border images
         mapImage = drawMap(3000, 20);
         borderTop = drawBorder(mapWidth, borderThickness, 20);
         borderBottom = drawBorder(mapWidth, borderThickness, 20);
@@ -46,13 +48,13 @@ public class GamePanel extends JPanel {
         setupInput();
         startGameLoop();
 
-        // Cordinates info label
-        worldLabel = new JLabel("<html>tank: 0, 0<br>mouse: 0, 0</html>");
-        worldLabel.setOpaque(true);
-        worldLabel.setBackground(Color.DARK_GRAY);
-        worldLabel.setForeground(Color.WHITE);
-        worldLabel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
-        this.add(worldLabel);
+        // Coordinates info label
+        infoLabel = new JLabel("<html>tank: 0, 0<br>mouse: 0, 0</html>");
+        infoLabel.setOpaque(true);
+        infoLabel.setBackground(Color.RED);
+        infoLabel.setForeground(Color.WHITE);
+        infoLabel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        this.add(infoLabel);
     }
 
     private void setupInput() {
@@ -115,29 +117,21 @@ public class GamePanel extends JPanel {
             int screenWidth = getWidth();
             int screenHeight = getHeight();
 
-            // Move the camera so that the tank is at the center of the screen (use tank
-            // center)
-            camX = (int) Math.round(tank.worldX + tank.getWidth() / 2.0 - screenWidth / 2.0);
-            camY = (int) Math.round(tank.worldY + tank.getHeight() / 2.0 - screenHeight / 2.0);
+            // Move the camera so that the tank is at the center of the screen (use tank center)
+            camX = (int) Math.round(tank.getWorldX() + tank.getWidth() / 2.0 - screenWidth / 2.0);
+            camY = (int) Math.round(tank.getWorldY() + tank.getHeight() / 2.0 - screenHeight / 2.0);
 
-            // "Clamp" the camera to ensure we don't see beyond the world (just a bit of the
-            // border is ok)
+            // "Clamp" the camera to ensure we don't see beyond the world (just a bit of the border is ok)
             // Maximum camera coordinates
             int maxCamX = Math.max(0, mapWidth - screenWidth + borderThickness);
             int maxCamY = Math.max(0, mapHeight - screenHeight + borderThickness);
-            if (camX < -borderThickness)
-                camX = -borderThickness;
-            if (camY < -borderThickness)
-                camY = -borderThickness;
-            if (camX > maxCamX)
-                camX = maxCamX;
-            if (camY > maxCamY)
-                camY = maxCamY;
+            if (camX < -borderThickness) camX = -borderThickness;
+            if (camY < -borderThickness) camY = -borderThickness;
+            if (camX > maxCamX) camX = maxCamX;
+            if (camY > maxCamY) camY = maxCamY;
 
             // Update info label
-            worldLabel.setText("<html>camera: " + camX + ", " + camY + "<br>tank: "
-                    + ((int) tank.worldX + tank.getWidth() / 2) + ", " + ((int) tank.worldY + tank.getHeight() / 2)
-                    + "<br>mouse: " + (int) mouseWorldX + ", " + (int) mouseWorldY + "</html>");
+            infoLabel.setText("<html>camera: " + camX + ", " + camY + "<br>tank: " + ((int) tank.getWorldX() + tank.getWidth() / 2) + ", " + ((int) tank.getWorldY() + tank.getHeight() / 2) + "<br>mouse: " + (int) mouseWorldX + ", " + (int) mouseWorldY + "</html>");
 
             // Repaint
             repaint();

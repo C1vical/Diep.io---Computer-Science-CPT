@@ -4,7 +4,7 @@ import java.awt.image.BufferedImage;
 
 public class Tank {
     // Tank coordinates in the "world"
-    public double worldX = -1, worldY = -1;
+    private double worldX, worldY;
     // Angle the tank is facing
     private double angle;
     // Tank movement speed
@@ -27,14 +27,10 @@ public class Tank {
 
         // If multiple keys are pressed, combine their effects
         // For example, if both w and s are pressed, they cancel each other out (1-1=0)
-        if (w)
-            moveY -= 1;
-        if (s)
-            moveY += 1;
-        if (a)
-            moveX -= 1;
-        if (d)
-            moveX += 1;
+        if (w) moveY -= 1;
+        if (s) moveY += 1;
+        if (a) moveX -= 1;
+        if (d) moveX += 1;
 
         // Normalize diagonal movement (so moving diagonally isn't faster)
         if (moveX != 0 && moveY != 0) {
@@ -47,14 +43,10 @@ public class Tank {
         worldY += moveY * speed;
 
         // Make sure the tank can't leave the map bounds (accounting for tank size)
-        if (worldX + width / 2 < 0)
-            worldX = -width / 2;
-        if (worldY + height / 2 < 0)
-            worldY = -height / 2;
-        if (worldX + width / 2 > mapWidth)
-            worldX = mapWidth - width / 2;
-        if (worldY + height / 2 > mapHeight)
-            worldY = mapHeight - height / 2;
+        if (worldX + width / 2 < 0) worldX = -width / 2;
+        if (worldY + height / 2 < 0) worldY = -height / 2;
+        if (worldX + width / 2 > mapWidth) worldX = mapWidth - width / 2;
+        if (worldY + height / 2 > mapHeight) worldY = mapHeight - height / 2;
     }
 
     public void rotateTank(double mouseWorldX, double mouseWorldY) {
@@ -85,5 +77,13 @@ public class Tank {
 
     public int getHeight() {
         return height;
+    }
+
+    public double getWorldX() {
+        return worldX;
+    }
+
+    public double getWorldY() {
+        return worldY;
     }
 }
