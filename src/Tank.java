@@ -42,7 +42,7 @@ public class Tank {
         worldX += moveX * speed;
         worldY += moveY * speed;
 
-        // Make sure the tank can't leave the map bounds (acounting for tank size)
+        // Make sure the tank can't leave the map bounds (accounting for tank size)
         if (worldX + width / 2 < 0) worldX = -width / 2;
         if (worldY + height / 2 < 0) worldY = -height / 2;
         if (worldX + width / 2 > mapWidth) worldX = mapWidth - width / 2;

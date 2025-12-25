@@ -1,10 +1,10 @@
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
+import javax.imageio.ImageIO;
+import javax.swing.*;
 
 public class GamePanel extends JPanel {
     private Tank tank;
@@ -114,9 +114,9 @@ public class GamePanel extends JPanel {
             int screenWidth = getWidth();
             int screenHeight = getHeight();
 
-            // Move the camera so that the tank is at the center of the screen
-            camX = (int) Math.round(tank.worldX - screenWidth / 2.0);
-            camY = (int) Math.round(tank.worldY - screenHeight / 2.0);
+            // Move the camera so that the tank is at the center of the screen (use tank center)
+            camX = (int) Math.round(tank.worldX + tank.getWidth() / 2.0 - screenWidth / 2.0);
+            camY = (int) Math.round(tank.worldY + tank.getHeight() / 2.0 - screenHeight / 2.0);
             
             // "Clamp" the camera to ensure we don't see beyond the world (just a bit of the border is ok)
             // Maximum camera coordinates
