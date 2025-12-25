@@ -1,10 +1,10 @@
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
+import javax.imageio.ImageIO;
+import javax.swing.*;
 
 public class GamePanel extends JPanel {
     private Tank tank;
@@ -44,7 +44,6 @@ public class GamePanel extends JPanel {
         tank = new Tank(mapWidth / 2 - 125, mapHeight / 2 - 125, tankImage);
 
         setFocusable(true);
-        
         setupInput();
         startGameLoop();
 
@@ -123,9 +122,9 @@ public class GamePanel extends JPanel {
             int screenWidth = getWidth();
             int screenHeight = getHeight();
 
-            // Move the camera so that the tank is at the center of the screen
-            camX = (int) Math.round(tank.worldX - screenWidth / 2.0);
-            camY = (int) Math.round(tank.worldY - screenHeight / 2.0);
+            // Move the camera so that the tank is at the center of the screen (use tank center)
+            camX = (int) Math.round(tank.worldX + tank.width / 2.0 - screenWidth / 2.0);
+            camY = (int) Math.round(tank.worldY + tank.height / 2.0 - screenHeight / 2.0);
             
             // "Clamp" the camera to ensure we don't see beyond the world (just a bit of the border is ok)
             // Maximum camera coordinates
@@ -138,8 +137,8 @@ public class GamePanel extends JPanel {
 
             // Update the persistent camera label instead of creating a new field each tick
             cameraLabel.setText("<html>camX: " + camX + "<br>camY: " + camY + "</html>");
-            // Update world label with tank world coords and mouse world coords
-            worldLabel.setText("<html>tank: " + ((int)tank.worldX+125) + ", " + ((int)tank.worldY+125) + "<br>mouse: " + (int)mouseWorldX + ", " + (int)mouseWorldY + "</html>");
+            // Update world label with tank center world coords and mouse world coords
+            worldLabel.setText("<html>tank: " + (int)(tank.worldX + tank.width/2.0) + ", " + (int)(tank.worldY + tank.height/2.0) + "<br>mouse: " + (int)mouseWorldX + ", " + (int)mouseWorldY + "</html>");
 
             // Repaint
             repaint();
