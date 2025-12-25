@@ -10,8 +10,8 @@ public class Tank {
      // Tank movement speed
     private double speed = 5;
     // Tank dimensions
-    public int width = 250;
-    public int height = 250;
+    private int width = 250;
+    private int height = 250;
 
     private BufferedImage image;
 
@@ -69,5 +69,12 @@ public class Tank {
         g2.drawImage(image, -width / 2, -height / 2, width, height, null);
         // Restore original graphic state
         g2.setTransform(old);
+    }
+    
+    public int getWidth() {
+        return width;
+    }
+    public int getHeight() {
+        return height;
     }
 }
