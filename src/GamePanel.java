@@ -3,32 +3,49 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
 public class GamePanel extends JPanel {
     private Tank tank;
     private BufferedImage mapImage, borderTop, borderBottom, borderLeft, borderRight;
-    private int borderThickness = 120;
+    private int borderThickness = 100;
     private BufferedImage tankImage;
 
     // Camera coordinates - world coordinates of the top-left of the screen
     private int camX , camY;
 
     // World size
-    private final int mapWidth = 2000;
-    private final int mapHeight = 2000;
+    private final int mapWidth = 4000;
+    private final int mapHeight = 4000;
+
+    // Tank dimensions
+    private int width = 200;
+    private int height = 200;
 
     // Input
     private boolean w, a, s, d;
     private int mouseX, mouseY; // Coordinates of the cursor in the screen (not world)
+    private boolean autoFire;
+    private boolean mouseDown = false;
 
+    // Bullet
+    private BufferedImage bulletImage;
+    private ArrayList<Bullet> bullets = new ArrayList<>();
+    private int reloadTime = 0;
+    private int reload = 40;
+
+    // Labels
     private JLabel infoLabel;
+    private JLabel autoFireLabel;
 
     public GamePanel() {
         try {
             // Load images
             tankImage = ImageIO.read(new File("src/assets/tanks/basic.png"));
+            bulletImage = ImageIO.read(new File("src/assets/game/bullet.png"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -41,7 +58,7 @@ public class GamePanel extends JPanel {
         borderRight = drawBorder(borderThickness, mapHeight, 20);
 
         // Place tank near the center of the square world
-        tank = new Tank(mapWidth / 2 - 125, mapHeight / 2 - 125, tankImage);
+        tank = new Tank(mapWidth / 2 - width / 2, mapHeight / 2 - height / 2, tankImage);
 
         setFocusable(true);
 
@@ -55,6 +72,14 @@ public class GamePanel extends JPanel {
         infoLabel.setForeground(Color.WHITE);
         infoLabel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
         this.add(infoLabel);
+
+        // Autofire label
+        autoFireLabel = new JLabel("Autofire: OFF");
+        autoFireLabel.setForeground(Color.WHITE);
+        autoFireLabel.setOpaque(true);
+        autoFireLabel.setBackground(new Color(0, 0, 0, 150));
+        autoFireLabel.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
+        add(autoFireLabel);
     }
 
     private void setupInput() {
@@ -96,12 +121,42 @@ public class GamePanel extends JPanel {
             public void mouseDragged(MouseEvent e) {
                 mouseX = e.getX();
                 mouseY = e.getY();
+                
+            }
+        });
+        // Left mouse button click/drag
+        addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                if (e.getButton() == MouseEvent.BUTTON1) {
+                    mouseDown = true;
+                }
+            }
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.getButton() == MouseEvent.BUTTON1) {
+                    mouseDown = false;
+                }
+            }
+        });
+        // Autofire (e pressed)
+        addKeyListener(new KeyAdapter() {
+            // Key pressed
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_E)
+                    if (autoFire) {
+                        autoFire = false;
+                        autoFireLabel.setText("Autofire: OFF");
+
+                    } else {
+                        autoFire = true;
+                        autoFireLabel.setText("Autofire: ON");
+                    }
             }
         });
     }
 
     private void startGameLoop() {
-        // In timer (repeats every 15 ms)
+        // Game loop every 15 ms
         Timer timer = new Timer(15, e -> {
             // Update movement
             tank.updateMovement(w, a, s, d, mapWidth, mapHeight);
@@ -129,6 +184,17 @@ public class GamePanel extends JPanel {
             if (camY < -borderThickness) camY = -borderThickness;
             if (camX > maxCamX) camX = maxCamX;
             if (camY > maxCamY) camY = maxCamY;
+
+            // Handle shooting/reloading
+            if (reloadTime > 0) {
+                reloadTime--;
+            }
+
+            if ((mouseDown && reloadTime == 0) || (autoFire && reloadTime == 0)) {
+                // Add a new bullet at the tank's position
+                bullets.add(new Bullet(tank.getWorldX() + tank.getWidth() / 2, tank.getWorldY() + tank.getHeight() / 2, tank.getAngle(), bulletImage));
+                reloadTime = reload; // Set reload time back to original value
+            }
 
             // Update info label
             infoLabel.setText("<html>camera: " + camX + ", " + camY + "<br>tank: " + ((int) tank.getWorldX() + tank.getWidth() / 2) + ", " + ((int) tank.getWorldY() + tank.getHeight() / 2) + "<br>mouse: " + (int) mouseWorldX + ", " + (int) mouseWorldY + "</html>");
@@ -173,7 +239,18 @@ public class GamePanel extends JPanel {
         }
 
         // Draw tank
-        tank.draw(g2, camX, camY);
+        tank.drawTank(g2, camX, camY);
+
+        // Draw bullets
+        for (Bullet bullet : bullets) {
+            if (bullet.getAlive() == true) {
+                bullet.updateBullet();
+                bullet.drawBullet(g2, camX, camY);
+            } else {
+                bullets.remove(bullet);
+                break;
+            }
+        }
     }
 
     private BufferedImage drawMap(int tileSize, int gridSize) {

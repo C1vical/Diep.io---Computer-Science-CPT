@@ -10,8 +10,8 @@ public class Tank {
     // Tank movement speed
     private double speed = 5;
     // Tank dimensions
-    private int width = 250;
-    private int height = 250;
+    private int width = 200;
+    private int height = 200;
 
     private BufferedImage image;
 
@@ -58,7 +58,7 @@ public class Tank {
         angle = Math.atan2(mouseWorldY - centerY, mouseWorldX - centerX);
     }
 
-    public void draw(Graphics2D g2, int camX, int camY) {
+    public void drawTank(Graphics2D g2, int camX, int camY) {
         // Save current graphic state
         AffineTransform old = g2.getTransform();
         // Move the origin to the tank's screen position
@@ -67,6 +67,10 @@ public class Tank {
         g2.rotate(angle);
         // Draw the image centered at the origin
         g2.drawImage(image, -width / 2, -height / 2, width, height, null);
+        // Hitbox (for debugging)
+        // g2.setColor(Color.BLUE);
+        // g2.setStroke(new BasicStroke(2)); // thickness of border
+        // g2.drawRect(-width / 2, -height / 2, width, height);
         // Restore original graphic state
         g2.setTransform(old);
     }
@@ -85,5 +89,9 @@ public class Tank {
 
     public double getWorldY() {
         return worldY;
+    }
+    
+    public double getAngle() {
+        return angle;
     }
 }
