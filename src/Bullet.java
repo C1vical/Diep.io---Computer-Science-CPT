@@ -6,12 +6,12 @@ import javax.imageio.ImageIO;
 
 public class Bullet {
     private double worldX, worldY;
-    private double speed = 6;
-    private int size = 30;
+    private double speed = 5;
     private double lifeTime = 100;
     private double angle;
     private boolean alive = true;
 
+    private int size;
     private BufferedImage image;
 
     public Bullet(double worldX, double worldY, double angle, BufferedImage image) {
@@ -19,6 +19,7 @@ public class Bullet {
         this.worldY = worldY;
         this.angle = angle;
         this.image = image;
+        size = image.getWidth();
     }
 
     public void updateBullet() {
@@ -59,5 +60,22 @@ public class Bullet {
 
     public boolean getAlive() {
         return alive;
+    }
+
+    // Allow adjusting bullet properties at runtime
+    public void setSpeed(double speed) {
+        this.speed = speed;
+    }
+
+    public double getSpeed() {
+        return speed;
+    }
+
+    public void setSize(int size) {
+        this.size = size;
+    }
+
+    public int getSize() {
+        return size;
     }
 }

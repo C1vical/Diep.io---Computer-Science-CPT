@@ -9,7 +9,7 @@ public class GameFrame extends JFrame {
         GamePanel gamePanel = new GamePanel();
         add(gamePanel);
 
-        setResizable(false);
+        // setResizable(false);
         setVisible(true);
     }
 

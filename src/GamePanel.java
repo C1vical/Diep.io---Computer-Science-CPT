@@ -11,15 +11,16 @@ import javax.swing.*;
 public class GamePanel extends JPanel {
     private Tank tank;
     private BufferedImage mapImage, borderTop, borderBottom, borderLeft, borderRight;
-    private int borderThickness = 100;
+    private int borderThickness = 1000;
+    // private int 
     private BufferedImage tankImage;
 
     // Camera coordinates - world coordinates of the top-left of the screen
     private int camX , camY;
 
     // World size
-    private final int mapWidth = 4000;
-    private final int mapHeight = 4000;
+    private final int mapWidth = 1000;
+    private final int mapHeight = 1000;
 
     // Tank dimensions
     private int width = 200;
@@ -31,11 +32,17 @@ public class GamePanel extends JPanel {
     private boolean autoFire;
     private boolean mouseDown = false;
 
-    // Bullet
+    // Bullets
     private BufferedImage bulletImage;
     private ArrayList<Bullet> bullets = new ArrayList<>();
-    private int reloadTime = 0;
-    private int reload = 40;
+    private double reloadTime = 0;
+    private double reload = 40;
+
+    // Shapes
+    private BufferedImage square;
+    private BufferedImage triangle;
+    private BufferedImage pentagon;
+    private ArrayList<Shape> shapes = new ArrayList<>();
 
     // Labels
     private JLabel infoLabel;
@@ -46,6 +53,9 @@ public class GamePanel extends JPanel {
             // Load images
             tankImage = ImageIO.read(new File("src/assets/tanks/basic.png"));
             bulletImage = ImageIO.read(new File("src/assets/game/bullet.png"));
+            square = ImageIO.read(new File("src/assets/shapes/square.png"));
+            triangle = ImageIO.read(new File("src/assets/shapes/triangle.png"));
+            pentagon = ImageIO.read(new File("src/assets/shapes/pentagon.png"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -153,6 +163,23 @@ public class GamePanel extends JPanel {
                     }
             }
         });
+        // Generate shape (for testing purposes)
+        addKeyListener(new KeyAdapter() {
+            // Key pressed
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_Q) {
+                    shapes.add(new Square(square));
+                }
+
+                if (e.getKeyCode() == KeyEvent.VK_T) {
+                    shapes.add(new Triangle(triangle));
+                }
+
+                if (e.getKeyCode() == KeyEvent.VK_P) {
+                    shapes.add(new Pentagon(pentagon));
+                }
+            }
+        });
     }
 
     private void startGameLoop() {
@@ -168,33 +195,11 @@ public class GamePanel extends JPanel {
             // Rotate tank using the mouse world coordinates
             tank.rotateTank(mouseWorldX, mouseWorldY);
 
-            // Dimensions of the screen
-            int screenWidth = getWidth();
-            int screenHeight = getHeight();
-
-            // Move the camera so that the tank is at the center of the screen (use tank center)
-            camX = (int) Math.round(tank.getWorldX() + tank.getWidth() / 2.0 - screenWidth / 2.0);
-            camY = (int) Math.round(tank.getWorldY() + tank.getHeight() / 2.0 - screenHeight / 2.0);
-
-            // "Clamp" the camera to ensure we don't see beyond the world (just a bit of the border is ok)
-            // Maximum camera coordinates
-            int maxCamX = Math.max(0, mapWidth - screenWidth + borderThickness);
-            int maxCamY = Math.max(0, mapHeight - screenHeight + borderThickness);
-            if (camX < -borderThickness) camX = -borderThickness;
-            if (camY < -borderThickness) camY = -borderThickness;
-            if (camX > maxCamX) camX = maxCamX;
-            if (camY > maxCamY) camY = maxCamY;
+            // Update camera position
+            updateCamera();
 
             // Handle shooting/reloading
-            if (reloadTime > 0) {
-                reloadTime--;
-            }
-
-            if ((mouseDown && reloadTime == 0) || (autoFire && reloadTime == 0)) {
-                // Add a new bullet at the tank's position
-                bullets.add(new Bullet(tank.getWorldX() + tank.getWidth() / 2, tank.getWorldY() + tank.getHeight() / 2, tank.getAngle(), bulletImage));
-                reloadTime = reload; // Set reload time back to original value
-            }
+            handleShooting();
 
             // Update info label
             infoLabel.setText("<html>camera: " + camX + ", " + camY + "<br>tank: " + ((int) tank.getWorldX() + tank.getWidth() / 2) + ", " + ((int) tank.getWorldY() + tank.getHeight() / 2) + "<br>mouse: " + (int) mouseWorldX + ", " + (int) mouseWorldY + "</html>");
@@ -205,36 +210,72 @@ public class GamePanel extends JPanel {
         timer.start(); // Start the timer
     }
 
+    private void updateCamera() {
+        // Dimensions of the screen
+        int screenWidth = getWidth();
+        int screenHeight = getHeight();
+
+        // Move the camera so that the tank is at the center of the screen (use tank center)
+        camX = (int) Math.round(tank.getWorldX() + tank.getWidth() / 2.0 - screenWidth / 2.0);
+        camY = (int) Math.round(tank.getWorldY() + tank.getHeight() / 2.0 - screenHeight / 2.0);
+
+        // Maximum camera coordinates (allow border visibility)
+        int maxCamX = Math.max(0, mapWidth - screenWidth + borderThickness);
+        int maxCamY = Math.max(0, mapHeight - screenHeight + borderThickness);
+
+        // Clamp camera position (to avoid showing beyond the map borders)
+        camX = Math.max(-borderThickness, Math.min(camX, maxCamX));
+        camY = Math.max(-borderThickness, Math.min(camY, maxCamY));
+    } 
+
+    private void handleShooting() {
+        if (reloadTime > 0) {
+            reloadTime--;
+        }
+
+        if ((mouseDown && reloadTime == 0) || (autoFire && reloadTime == 0)) {
+            // Add a new bullet at the tank's position
+            bullets.add(new Bullet(tank.getWorldX() + tank.getWidth() / 2, tank.getWorldY() + tank.getHeight() / 2, tank.getAngle(), bulletImage));
+            reloadTime = reload; // Set reload time back to original value
+        }
+    }
+
     // This draws the game
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
 
+        int screenWidth = getWidth();
+        int screenHeight = getHeight();
+
+        int tileWidth = mapImage.getWidth();
+        int tileHeight = mapImage.getHeight();
+
         // Draw map
-        for (int x = -camX % mapImage.getWidth(); x < getWidth(); x += mapImage.getWidth()) {
-            for (int y = -camY % mapImage.getHeight(); y < getHeight(); y += mapImage.getHeight()) {
+        for (int x = -camX % tileWidth; x < screenWidth; x += tileWidth) {
+            for (int y = -camY % tileHeight; y < screenHeight; y += tileHeight) {
                 g2.drawImage(mapImage, x, y, null);
             }
         }
 
         // Draw top border
-        for (int x = -camX - borderThickness % borderTop.getWidth(); x < getWidth(); x += borderTop.getWidth()) {
+        for (int x = (-camX - borderThickness) % borderTop.getWidth(); x < screenWidth; x += borderTop.getWidth()) {
             g2.drawImage(borderTop, x, -camY - borderThickness, null);
         }
 
         // Draw bottom border
-        for (int x = -camX % borderBottom.getWidth(); x < getWidth(); x += borderBottom.getWidth()) {
+        for (int x = -camX % borderBottom.getWidth(); x < screenWidth; x += borderBottom.getWidth()) {
             g2.drawImage(borderBottom, x, -camY + mapHeight, null);
         }
 
         // Draw left border
-        for (int y = -camY % borderLeft.getHeight(); y < getHeight(); y += borderLeft.getHeight()) {
+        for (int y = -camY % borderLeft.getHeight(); y < screenHeight; y += borderLeft.getHeight()) {
             g2.drawImage(borderLeft, -camX - borderThickness, y, null);
         }
 
         // Draw right border
-        for (int y = -camY % borderRight.getHeight(); y < getHeight(); y += borderRight.getHeight()) {
+        for (int y = -camY % borderRight.getHeight(); y < screenHeight; y += borderRight.getHeight()) {
             g2.drawImage(borderRight, -camX + mapWidth, y, null);
         }
 
@@ -250,6 +291,12 @@ public class GamePanel extends JPanel {
                 bullets.remove(bullet);
                 break;
             }
+        }
+
+        // Draw shapes
+        for (Shape shape : shapes) {
+            shape.updateShape();
+            shape.drawShape(g2, camX, camY);
         }
     }
 

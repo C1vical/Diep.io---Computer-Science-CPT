@@ -13,6 +13,8 @@ public class Tank {
     private int width = 200;
     private int height = 200;
 
+    private int borderOverlap = 100;
+
     private BufferedImage image;
 
     public Tank(double worldX, double worldY, BufferedImage image) {
@@ -42,11 +44,12 @@ public class Tank {
         worldX += moveX * speed;
         worldY += moveY * speed;
 
-        // Make sure the tank can't leave the map bounds (accounting for tank size)
-        if (worldX + width / 2 < 0) worldX = -width / 2;
-        if (worldY + height / 2 < 0) worldY = -height / 2;
-        if (worldX + width / 2 > mapWidth) worldX = mapWidth - width / 2;
-        if (worldY + height / 2 > mapHeight) worldY = mapHeight - height / 2;
+        
+        // Make sure the tank can't leave the map bounds (accounting for tank size and border overlap like in the real game)
+        if (worldX + width / 2 < -borderOverlap) worldX = -width / 2 - borderOverlap;
+        if (worldY + height / 2 < -borderOverlap) worldY = -height / 2 - borderOverlap;
+        if (worldX + width / 2 > mapWidth + borderOverlap) worldX = mapWidth - width / 2 + borderOverlap;
+        if (worldY + height / 2 > mapHeight + borderOverlap) worldY = mapHeight - height / 2 + borderOverlap;
     }
 
     public void rotateTank(double mouseWorldX, double mouseWorldY) {
@@ -93,5 +96,20 @@ public class Tank {
     
     public double getAngle() {
         return angle;
+    }
+
+    // Setters so UI can modify properties at runtime
+    public void setSpeed(double speed) {
+        this.speed = speed;
+    }
+
+    public double getSpeed() {
+        return speed;
+    }
+
+    // Set both width and height (square tank)
+    public void setSize(int size) {
+        this.width = size;
+        this.height = size;
     }
 }
