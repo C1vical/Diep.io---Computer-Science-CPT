@@ -19,8 +19,8 @@ public class GamePanel extends JPanel {
     private int camX , camY;
 
     // World size
-    private final int mapWidth = 1000;
-    private final int mapHeight = 1000;
+    private static int mapWidth = 1000;
+    private static int mapHeight = 1000;
 
     // Tank dimensions
     private int width = 200;
@@ -43,6 +43,7 @@ public class GamePanel extends JPanel {
     private BufferedImage triangle;
     private BufferedImage pentagon;
     private ArrayList<Shape> shapes = new ArrayList<>();
+    private int shapeCount = 0;
 
     // Labels
     private JLabel infoLabel;
@@ -97,26 +98,18 @@ public class GamePanel extends JPanel {
         addKeyListener(new KeyAdapter() {
             // Key pressed
             public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_W)
-                    w = true;
-                if (e.getKeyCode() == KeyEvent.VK_A)
-                    a = true;
-                if (e.getKeyCode() == KeyEvent.VK_S)
-                    s = true;
-                if (e.getKeyCode() == KeyEvent.VK_D)
-                    d = true;
+                if (e.getKeyCode() == KeyEvent.VK_W) w = true;
+                if (e.getKeyCode() == KeyEvent.VK_A) a = true;
+                if (e.getKeyCode() == KeyEvent.VK_S) s = true;
+                if (e.getKeyCode() == KeyEvent.VK_D) d = true;
             }
 
             // Key released
             public void keyReleased(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_W)
-                    w = false;
-                if (e.getKeyCode() == KeyEvent.VK_A)
-                    a = false;
-                if (e.getKeyCode() == KeyEvent.VK_S)
-                    s = false;
-                if (e.getKeyCode() == KeyEvent.VK_D)
-                    d = false;
+                if (e.getKeyCode() == KeyEvent.VK_W) w = false;
+                if (e.getKeyCode() == KeyEvent.VK_A) a = false;
+                if (e.getKeyCode() == KeyEvent.VK_S) s = false;
+                if (e.getKeyCode() == KeyEvent.VK_D) d = false;
             }
         });
         // Mouse cursor coordinates
@@ -126,7 +119,6 @@ public class GamePanel extends JPanel {
                 mouseX = e.getX();
                 mouseY = e.getY();
             }
-
             // Cursor dragged
             public void mouseDragged(MouseEvent e) {
                 mouseX = e.getX();
@@ -137,22 +129,18 @@ public class GamePanel extends JPanel {
         // Left mouse button click/drag
         addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
-                if (e.getButton() == MouseEvent.BUTTON1) {
-                    mouseDown = true;
-                }
+                if (e.getButton() == MouseEvent.BUTTON1) mouseDown = true;
             }
             @Override
             public void mouseReleased(MouseEvent e) {
-                if (e.getButton() == MouseEvent.BUTTON1) {
-                    mouseDown = false;
-                }
+                if (e.getButton() == MouseEvent.BUTTON1) mouseDown = false;
             }
         });
         // Autofire (e pressed)
         addKeyListener(new KeyAdapter() {
             // Key pressed
             public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_E)
+                if (e.getKeyCode() == KeyEvent.VK_E) {
                     if (autoFire) {
                         autoFire = false;
                         autoFireLabel.setText("Autofire: OFF");
@@ -161,23 +149,16 @@ public class GamePanel extends JPanel {
                         autoFire = true;
                         autoFireLabel.setText("Autofire: ON");
                     }
+                }  
             }
         });
         // Generate shape (for testing purposes)
         addKeyListener(new KeyAdapter() {
             // Key pressed
             public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_Q) {
-                    shapes.add(new Square(square));
-                }
-
-                if (e.getKeyCode() == KeyEvent.VK_T) {
-                    shapes.add(new Triangle(triangle));
-                }
-
-                if (e.getKeyCode() == KeyEvent.VK_P) {
-                    shapes.add(new Pentagon(pentagon));
-                }
+                if (e.getKeyCode() == KeyEvent.VK_Q) shapes.add(new Shape(square));
+                if (e.getKeyCode() == KeyEvent.VK_T) shapes.add(new Shape(triangle));
+                if (e.getKeyCode() == KeyEvent.VK_P) shapes.add(new Shape(pentagon));
             }
         });
     }
@@ -200,6 +181,19 @@ public class GamePanel extends JPanel {
 
             // Handle shooting/reloading
             handleShooting();
+
+            // Shape generation
+            if (shapeCount < 10) { // Generate 10 shapes
+                shapeCount++;
+                int shapeType = (int) (Math.random() * 3); // Random number between 0-2
+                if (shapeType == 0) {
+                    shapes.add(new Shape(square));
+                } else if (shapeType == 1) {
+                    shapes.add(new Shape(triangle));
+                } else {
+                    shapes.add(new Shape(pentagon));
+                }
+            }
 
             // Update info label
             infoLabel.setText("<html>camera: " + camX + ", " + camY + "<br>tank: " + ((int) tank.getWorldX() + tank.getWidth() / 2) + ", " + ((int) tank.getWorldY() + tank.getHeight() / 2) + "<br>mouse: " + (int) mouseWorldX + ", " + (int) mouseWorldY + "</html>");
@@ -342,6 +336,14 @@ public class GamePanel extends JPanel {
 
         g2.dispose();
         return img;
+    }
+
+    public static int getMapWidth() {
+        return mapWidth;
+    }
+
+    public static int getMapHeight() {
+        return mapHeight;
     }
 
 }

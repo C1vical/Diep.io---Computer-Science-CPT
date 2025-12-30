@@ -40,8 +40,7 @@ public class MenuFrame extends JFrame {
         ImageIcon creditsIcon = new ImageIcon("src/assets/menu/creditsButton.png");
         int creditsIconWidth = 280;
         int creditsIconHeight = 100;
-        Image resizedCredits = creditsIcon.getImage().getScaledInstance(creditsIconWidth, creditsIconHeight,
-                Image.SCALE_SMOOTH);
+        Image resizedCredits = creditsIcon.getImage().getScaledInstance(creditsIconWidth, creditsIconHeight, Image.SCALE_SMOOTH);
         ImageIcon resizedCreditsIcon = new ImageIcon(resizedCredits);
         JButton creditButton = new JButton(resizedCreditsIcon); // Show credits dialog
         creditButton.setBorderPainted(false);
@@ -64,6 +63,7 @@ public class MenuFrame extends JFrame {
         // Center the Play button on the screen
         int playX = (screenW - playIconWidth) / 2;
         int playY = (screenH - playIconHeight) / 2;
+
         // Position Y uses a fraction so the button sits lower on the menu
         playButton.setBounds(playX, (int) (1.4 * playY), playIconWidth, playIconHeight);
         menuPanel.add(playButton);
@@ -77,7 +77,6 @@ public class MenuFrame extends JFrame {
         // Add menu panel to menu frame
         add(menuPanel);
         setVisible(true);
-        setResizable(false);
     }
 
     private class ImagePanel extends JPanel {
