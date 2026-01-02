@@ -4,22 +4,20 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import javax.imageio.ImageIO;
 
-public class Bullet {
-    private double worldX, worldY;
+public class Bullet extends Sprite {
+    // Bullet speed
     private double speed = 5;
+    // Bullet lifetime
     private double lifeTime = 100;
-    private double angle;
+    // Bullet alive status
     private boolean alive = true;
-
-    private int size;
-    private BufferedImage image;
-
-    public Bullet(double worldX, double worldY, double angle, BufferedImage image) {
-        this.worldX = worldX;
-        this.worldY = worldY;
+    
+    public Bullet(double worldX, double worldY, double angle, BufferedImage image, int bulletSize, double speed) {
+        super(worldX, worldY, image.getWidth(), image.getHeight(), image, 30, 30);
         this.angle = angle;
-        this.image = image;
-        size = image.getWidth();
+        this.width = bulletSize;
+        this.height = bulletSize;
+        this.speed = speed;
     }
 
     public void updateBullet() {
@@ -40,21 +38,16 @@ public class Bullet {
         }
     }
 
-
-    public void drawBullet(Graphics2D g2, int camX, int camY) {
-        // Save current graphic state
+    public void drawBullet(Graphics2D g2, int camX, int camY, int tankSize) {
         AffineTransform old = g2.getTransform();
-        // Move the origin to the bullet's screen position
         g2.translate(worldX - camX, worldY - camY);
-        // Rotate the graphics context to the bullet's angle
         g2.rotate(angle);
-        // Draw the image centered at the origin and then translated to the front of the turret
-        g2.drawImage(image, -size / 2 + 75, -size / 2, size, size, null);
-        // Hitbox (for debugging)
-        // g2.setColor(Color.GREEN);
-        // g2.setStroke(new BasicStroke(2)); // thickness of border
-        // g2.drawRect(-size / 2 + 75, -size / 2, size, size);
-        // Restore original graphic state
+        g2.drawImage(image, (int) (-width / 2 + (3 * tankSize / 8) + (width / 2)), -height / 2, width, height, null);
+        if (GamePanel.hitbox) {
+            g2.setColor(Color.YELLOW);
+            g2.setStroke(new BasicStroke(2)); // thickness of border
+            g2.drawRect((int) (-width / 2 + ((3 * tankSize / 8) + (width / 2))), -height / 2, width, height);
+        }
         g2.setTransform(old);
     }
 
@@ -62,20 +55,7 @@ public class Bullet {
         return alive;
     }
 
-    // Allow adjusting bullet properties at runtime
     public void setSpeed(double speed) {
         this.speed = speed;
-    }
-
-    public double getSpeed() {
-        return speed;
-    }
-
-    public void setSize(int size) {
-        this.size = size;
-    }
-
-    public int getSize() {
-        return size;
     }
 }

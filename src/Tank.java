@@ -1,26 +1,24 @@
-import java.awt.*;
-import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 
-public class Tank {
-    // Tank coordinates in the "world"
-    private double worldX, worldY;
-    // Angle the tank is facing
-    private double angle;
+public class Tank extends Sprite {
     // Tank movement speed
     private double speed = 5;
-    // Tank dimensions
-    private int width = 200;
-    private int height = 200;
-
+    // Tank dimensions default are set in constructor
     private int borderOverlap = 100;
 
-    private BufferedImage image;
-
     public Tank(double worldX, double worldY, BufferedImage image) {
-        this.worldX = worldX;
-        this.worldY = worldY;
-        this.image = image;
+        super(worldX, worldY, image.getWidth(), image.getHeight(), image, 100, 100);
+        this.width = 200;
+        this.height = 200;
+    }
+
+    public void getTankAngle(double mouseWorldX, double mouseWorldY) {
+        // Center of the tank
+        double centerX = worldX + width / 2.0;
+        double centerY = worldY + height / 2.0;
+
+        // Calculate the angle of rotation
+        this.angle = Math.atan2(mouseWorldY - centerY, mouseWorldX - centerX);
     }
 
     public void updateMovement(boolean w, boolean a, boolean s, boolean d, int mapWidth, int mapHeight) {
@@ -28,7 +26,7 @@ public class Tank {
         double moveY = 0;
 
         // If multiple keys are pressed, combine their effects
-        // For example, if both w and s are pressed, they cancel each other out (1-1=0)
+        // For example, if both w and s are pressed, they cancel each other out
         if (w) moveY -= 1;
         if (s) moveY += 1;
         if (a) moveX -= 1;
@@ -44,72 +42,16 @@ public class Tank {
         worldX += moveX * speed;
         worldY += moveY * speed;
 
-        
         // Make sure the tank can't leave the map bounds (accounting for tank size and border overlap like in the real game)
-        if (worldX + width / 2 < -borderOverlap) worldX = -width / 2 - borderOverlap;
-        if (worldY + height / 2 < -borderOverlap) worldY = -height / 2 - borderOverlap;
-        if (worldX + width / 2 > mapWidth + borderOverlap) worldX = mapWidth - width / 2 + borderOverlap;
-        if (worldY + height / 2 > mapHeight + borderOverlap) worldY = mapHeight - height / 2 + borderOverlap;
+        worldX = Math.max(-width / 2 - borderOverlap, Math.min(worldX, mapWidth - width / 2 + borderOverlap));
+        worldY = Math.max(-height / 2 - borderOverlap, Math.min(worldY, mapHeight - height / 2 + borderOverlap));
     }
 
-    public void rotateTank(double mouseWorldX, double mouseWorldY) {
-        // Center of the tank
-        double centerX = worldX + width / 2.0;
-        double centerY = worldY + height / 2.0;
-
-        // Calculate the angle of rotation
-        angle = Math.atan2(mouseWorldY - centerY, mouseWorldX - centerX);
-    }
-
-    public void drawTank(Graphics2D g2, int camX, int camY) {
-        // Save current graphic state
-        AffineTransform old = g2.getTransform();
-        // Move the origin to the tank's screen position
-        g2.translate(worldX - camX + width / 2.0, worldY - camY + height / 2.0);
-        // Rotate the tank and the rest of the graphic state
-        g2.rotate(angle);
-        // Draw the image centered at the origin
-        g2.drawImage(image, -width / 2, -height / 2, width, height, null);
-        // Hitbox (for debugging)
-        // g2.setColor(Color.BLUE);
-        // g2.setStroke(new BasicStroke(2)); // thickness of border
-        // g2.drawRect(-width / 2, -height / 2, width, height);
-        // Restore original graphic state
-        g2.setTransform(old);
-    }
-
-    public int getWidth() {
-        return width;
-    }
-
-    public int getHeight() {
-        return height;
-    }
-
-    public double getWorldX() {
-        return worldX;
-    }
-
-    public double getWorldY() {
-        return worldY;
-    }
-    
-    public double getAngle() {
-        return angle;
-    }
-
-    // Setters so UI can modify properties at runtime
     public void setSpeed(double speed) {
         this.speed = speed;
     }
 
     public double getSpeed() {
         return speed;
-    }
-
-    // Set both width and height (square tank)
-    public void setSize(int size) {
-        this.width = size;
-        this.height = size;
     }
 }

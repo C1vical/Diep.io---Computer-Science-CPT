@@ -7,6 +7,8 @@ import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 public class GamePanel extends JPanel {
     private Tank tank;
@@ -19,8 +21,8 @@ public class GamePanel extends JPanel {
     private int camX , camY;
 
     // World size
-    private static int mapWidth = 1000;
-    private static int mapHeight = 1000;
+    private static int mapWidth = 2000;
+    private static int mapHeight = 2000;
 
     // Tank dimensions
     private int width = 200;
@@ -31,12 +33,15 @@ public class GamePanel extends JPanel {
     private int mouseX, mouseY; // Coordinates of the cursor in the screen (not world)
     private boolean autoFire;
     private boolean mouseDown = false;
+    static boolean hitbox = false;
 
     // Bullets
     private BufferedImage bulletImage;
     private ArrayList<Bullet> bullets = new ArrayList<>();
     private double reloadTime = 0;
     private double reload = 40;
+    private int bulletSize = 30;
+    private int bulletSpeed = 5;
 
     // Shapes
     private BufferedImage square;
@@ -48,6 +53,7 @@ public class GamePanel extends JPanel {
     // Labels
     private JLabel infoLabel;
     private JLabel autoFireLabel;
+    private JLabel hitboxLabel;
 
     public GamePanel() {
         try {
@@ -68,29 +74,25 @@ public class GamePanel extends JPanel {
         borderLeft = drawBorder(borderThickness, mapHeight, 20);
         borderRight = drawBorder(borderThickness, mapHeight, 20);
 
-        // Place tank near the center of the square world
-        tank = new Tank(mapWidth / 2 - width / 2, mapHeight / 2 - height / 2, tankImage);
-
         setFocusable(true);
 
+        // Add key listeners
         setupInput();
+
+        setLayout(new BorderLayout());
+
+        // Labels
+        JPanel labels = createLabels();
+        labels.setOpaque(false);
+        add(labels, BorderLayout.NORTH);
+
+        // Sliders
+        JPanel sliders = createSliders();
+        sliders.setOpaque(false);
+        add(sliders, BorderLayout.SOUTH);
+    
+        // Start the game loop
         startGameLoop();
-
-        // Coordinates info label
-        infoLabel = new JLabel("<html>tank: 0, 0<br>mouse: 0, 0</html>");
-        infoLabel.setOpaque(true);
-        infoLabel.setBackground(Color.RED);
-        infoLabel.setForeground(Color.WHITE);
-        infoLabel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
-        this.add(infoLabel);
-
-        // Autofire label
-        autoFireLabel = new JLabel("Autofire: OFF");
-        autoFireLabel.setForeground(Color.WHITE);
-        autoFireLabel.setOpaque(true);
-        autoFireLabel.setBackground(new Color(0, 0, 0, 150));
-        autoFireLabel.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
-        add(autoFireLabel);
     }
 
     private void setupInput() {
@@ -161,24 +163,39 @@ public class GamePanel extends JPanel {
                 if (e.getKeyCode() == KeyEvent.VK_P) shapes.add(new Shape(pentagon));
             }
         });
+        // Hitboxes (b pressed)
+        addKeyListener(new KeyAdapter() {
+            // Key pressed
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_B) {
+                    if (hitbox) {
+                        hitbox = false;
+                        hitboxLabel.setText("Hitbox: OFF");
+
+                    } else {
+                        hitbox = true;
+                        hitboxLabel.setText("Hitbox: ON");
+                    }
+                }  
+            }
+        });
     }
 
     private void startGameLoop() {
+        // Place tank near the center of the square world
+        tank = new Tank(mapWidth / 2 - width / 2, mapHeight / 2 - height / 2, tankImage);
         // Game loop every 15 ms
         Timer timer = new Timer(15, e -> {
-            // Update movement
-            tank.updateMovement(w, a, s, d, mapWidth, mapHeight);
-
+            requestFocusInWindow();
+            // Update tank
             // Convert cursor screen coordinates to world coordinates
             double mouseWorldX = mouseX + camX;
             double mouseWorldY = mouseY + camY;
-
-            // Rotate tank using the mouse world coordinates
-            tank.rotateTank(mouseWorldX, mouseWorldY);
+            updateTank(mouseWorldX, mouseWorldY);
 
             // Update camera position
             updateCamera();
-
+            
             // Handle shooting/reloading
             handleShooting();
 
@@ -196,12 +213,20 @@ public class GamePanel extends JPanel {
             }
 
             // Update info label
-            infoLabel.setText("<html>camera: " + camX + ", " + camY + "<br>tank: " + ((int) tank.getWorldX() + tank.getWidth() / 2) + ", " + ((int) tank.getWorldY() + tank.getHeight() / 2) + "<br>mouse: " + (int) mouseWorldX + ", " + (int) mouseWorldY + "</html>");
+            infoLabel.setText("<html>Camera: " + camX + ", " + camY + "<br>Tank: " + ((int) tank.getWorldX() + tank.getWidth() / 2) + ", " + ((int) tank.getWorldY() + tank.getHeight() / 2) + "<br>Mouse: " + (int) mouseWorldX + ", " + (int) mouseWorldY + "</html>");
 
             // Repaint
             repaint();
         });
         timer.start(); // Start the timer
+    }
+
+    private void updateTank(double mouseWorldX, double mouseWorldY) {
+        // Get the angle of the tank
+        tank.getTankAngle(mouseWorldX, mouseWorldY);
+
+        // Update movement
+        tank.updateMovement(w, a, s, d, mapWidth, mapHeight);
     }
 
     private void updateCamera() {
@@ -229,7 +254,7 @@ public class GamePanel extends JPanel {
 
         if ((mouseDown && reloadTime == 0) || (autoFire && reloadTime == 0)) {
             // Add a new bullet at the tank's position
-            bullets.add(new Bullet(tank.getWorldX() + tank.getWidth() / 2, tank.getWorldY() + tank.getHeight() / 2, tank.getAngle(), bulletImage));
+            bullets.add(new Bullet(tank.getWorldX() + tank.getWidth() / 2, tank.getWorldY() + tank.getHeight() / 2, tank.getAngle(), bulletImage, bulletSize, bulletSpeed));
             reloadTime = reload; // Set reload time back to original value
         }
     }
@@ -273,24 +298,36 @@ public class GamePanel extends JPanel {
             g2.drawImage(borderRight, -camX + mapWidth, y, null);
         }
 
+        // Draw shapes
+        for (Shape shape : shapes) {
+            shape.updateShape();
+            // Shape's screen coordinates
+            double shapeScreenX = shape.getWorldX() - camX;
+            double shapeScreenY = shape.getWorldY() - camY;
+            // Only draw if the shape is in the screen
+            if (shapeScreenX >= 0 && shapeScreenX <= getWidth() && shapeScreenY >= 0 && shapeScreenY <= getHeight()) {
+                shape.drawSprite(g2, camX, camY);
+            }
+        }
+
         // Draw tank
-        tank.drawTank(g2, camX, camY);
+        tank.drawSprite(g2, camX, camY);
 
         // Draw bullets
         for (Bullet bullet : bullets) {
             if (bullet.getAlive() == true) {
                 bullet.updateBullet();
-                bullet.drawBullet(g2, camX, camY);
+                // Bullet's screen coordinates
+                double bulletScreenX = bullet.getWorldX() - camX;
+                double bulletScreenY = bullet.getWorldY() - camY;
+                // Only draw if the bullet is in the screen
+                if (bulletScreenX >= 0 && bulletScreenX <= getWidth() && bulletScreenY >= 0 && bulletScreenY <= getHeight()) {
+                    bullet.drawBullet(g2, camX, camY, tank.width);
+                }
             } else {
                 bullets.remove(bullet);
                 break;
             }
-        }
-
-        // Draw shapes
-        for (Shape shape : shapes) {
-            shape.updateShape();
-            shape.drawShape(g2, camX, camY);
         }
     }
 
@@ -336,6 +373,136 @@ public class GamePanel extends JPanel {
 
         g2.dispose();
         return img;
+    }
+
+    private JPanel createLabels() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new FlowLayout());
+        // Coordinates
+        infoLabel = new JLabel("<html>Camera: <br>Tank: <br>Mouse: ");
+        infoLabel.setOpaque(true);
+        infoLabel.setBackground(Color.RED);
+        infoLabel.setForeground(Color.WHITE);
+        infoLabel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        panel.add(infoLabel);
+
+        // Autofire
+        autoFireLabel = new JLabel("Autofire: OFF");
+        autoFireLabel.setForeground(Color.WHITE);
+        autoFireLabel.setOpaque(true);
+        autoFireLabel.setBackground(new Color(0, 0, 0, 150));
+        autoFireLabel.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
+        panel.add(autoFireLabel);
+
+         // Hitbox
+        hitboxLabel = new JLabel("Hitbox: OFF");
+        hitboxLabel.setForeground(Color.WHITE);
+        hitboxLabel.setOpaque(true);
+        hitboxLabel.setBackground(new Color(0, 0, 0, 150));
+        hitboxLabel.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
+        panel.add(hitboxLabel);
+
+        return(panel);
+    }
+
+    private JPanel createSliders() {
+        JPanel slidersPanel = new JPanel();
+        slidersPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 5));
+
+        // Movement speed
+        JSlider movementSpeedSlider = new JSlider(5, 100, 5);
+        JLabel movementSpeedLabel = new JLabel("Movement Speed: " + 5);
+        // Detects change in the slider
+        movementSpeedSlider.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                JSlider source = (JSlider) e.getSource();
+                movementSpeedLabel.setText("Movement Speed: " + source.getValue());
+                tank.setSpeed(source.getValue());
+            }
+        });
+        // Add the slider + the text label to the panel
+        slidersPanel.add(makeSliderPanel(movementSpeedLabel, movementSpeedSlider));
+
+        // Repeat for the rest of the sliders
+
+        // Reload speed
+        JSlider reloadSpeedSlider = new JSlider(5, 100, (int) reload);
+        JLabel reloadSpeedLabel = new JLabel("Reload Speed: " + (int) reload);
+
+        reloadSpeedSlider.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                JSlider source = (JSlider) e.getSource();
+                reloadSpeedLabel.setText("Reload Speed: " + source.getValue());
+                reload = source.getValue();
+            }
+        });
+
+        slidersPanel.add(makeSliderPanel(reloadSpeedLabel, reloadSpeedSlider));
+
+        // Tank size
+        JSlider tankSizeSlider = new JSlider(100, 1000, 200);
+        JLabel tankSizeLabel = new JLabel("Tank Size: " + 200);
+        
+        tankSizeSlider.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                JSlider source = (JSlider) e.getSource();
+                tankSizeLabel.setText("Tank Size: " + source.getValue());
+                tank.width = source.getValue();
+                tank.height = source.getValue();
+            }
+        });
+
+        slidersPanel.add(makeSliderPanel(tankSizeLabel, tankSizeSlider));
+
+        // Bullet size
+        JSlider bulletSizeSlider = new JSlider(10, 300, bulletSize);
+        JLabel bulletSizeLabel = new JLabel("Bullet Size: " + bulletSize);
+
+        bulletSizeSlider.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                JSlider source = (JSlider) e.getSource();
+                bulletSizeLabel.setText("Bullet Size: " + source.getValue());
+                bulletSize = source.getValue();
+            }
+        });
+        slidersPanel.add(makeSliderPanel(bulletSizeLabel, bulletSizeSlider));
+
+        // Bulllet speed
+        JSlider bulletSpeedSlider = new JSlider(3, 15, bulletSpeed);
+        JLabel bulletSpeedLabel = new JLabel("Bullet Speed: " + bulletSpeed);
+
+        bulletSpeedSlider.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                JSlider source = (JSlider) e.getSource();
+                bulletSpeedLabel.setText("Bullet Speed: " + source.getValue());
+                bulletSpeed = source.getValue();
+            }
+        });
+        slidersPanel.add(makeSliderPanel(bulletSpeedLabel, bulletSpeedSlider));
+
+        
+        return(slidersPanel);
+    }
+
+    private JPanel makeSliderPanel(JLabel label, JSlider slider) {
+        JPanel p = new JPanel();
+        p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
+        p.setBackground(new Color(60, 75, 85, 150));
+        label.setForeground(Color.WHITE);
+        slider.setBackground(new Color(60, 75, 85, 150));
+
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
+        slider.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        p.add(label);
+        p.add(slider);
+        
+        return p;
     }
 
     public static int getMapWidth() {
