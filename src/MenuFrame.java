@@ -4,6 +4,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class MenuFrame extends JFrame {
+    double PLAY_Y_RATIO = 0.65; // 65% down the screen
+    double CREDITS_X_RATIO = 0.001; // 0.1% from left
+    double CREDITS_Y_RATIO = 0.965; // 96.5% down the screen
+
     public MenuFrame() {
         setTitle("Tank Game"); // Sets the title of the menu frame
         setExtendedState(JFrame.MAXIMIZED_BOTH); // Start maximized for menu
@@ -62,16 +66,15 @@ public class MenuFrame extends JFrame {
 
         // Center the Play button on the screen
         int playX = (screenW - playIconWidth) / 2;
-        int playY = (screenH - playIconHeight) / 2;
-
-        // Position Y uses a fraction so the button sits lower on the menu
-        playButton.setBounds(playX, (int) (1.4 * playY), playIconWidth, playIconHeight);
+        int playY = (int)(screenH * PLAY_Y_RATIO - playIconHeight / 2);
+        playButton.setBounds(playX, playY, playIconWidth, playIconHeight);
         menuPanel.add(playButton);
 
         // Place Credits button at bottom-left with a small margin
-        int creditsX = 10;
-        int creditsY = screenH - creditsIconHeight - 40;
+        int creditsX = (int)(screenW * CREDITS_X_RATIO);
+        int creditsY = (int)(screenH * CREDITS_Y_RATIO - creditsIconHeight);
         creditButton.setBounds(creditsX, creditsY, creditsIconWidth, creditsIconHeight);
+        
         menuPanel.add(creditButton);
 
         // Add menu panel to menu frame

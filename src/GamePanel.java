@@ -54,6 +54,11 @@ public class GamePanel extends JPanel {
     private JLabel infoLabel;
     private JLabel autoFireLabel;
     private JLabel hitboxLabel;
+    
+    // Framerate
+    private int frames = 0;
+    private int fps = 0;
+    private long lastTime = System.nanoTime();
 
     public GamePanel() {
         try {
@@ -310,6 +315,12 @@ public class GamePanel extends JPanel {
             }
         }
 
+        // Draw fps
+        updateFPS();
+        g2.setColor(Color.WHITE);
+        g2.setFont(new Font("Arial", Font.BOLD, 20));
+        g2.drawString("FPS: " + fps, 10, 20);
+
         // Draw tank
         tank.drawSprite(g2, camX, camY);
 
@@ -511,6 +522,17 @@ public class GamePanel extends JPanel {
 
     public static int getMapHeight() {
         return mapHeight;
+    }
+
+    private void updateFPS() {
+        frames++;
+        long currentTime = System.nanoTime();
+
+        if (currentTime - lastTime >= 1_000_000_000L) {
+            fps = frames;
+            frames = 0;
+            lastTime = currentTime;
+        }
     }
 
 }
